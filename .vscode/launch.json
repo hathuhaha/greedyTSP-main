@@ -1,0 +1,25 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "C/C++ Runner: Debug Session",
+      "type": "cppdbg",
+      "request": "launch",
+      "args": [],
+      "stopAtEntry": false,
+      "externalConsole": true,
+      "cwd": "c:/Users/ORLab/OneDrive/Documents/Lab/greedyTSP-main/greedyTSP-main",
+      "program": "c:/Users/ORLab/OneDrive/Documents/Lab/greedyTSP-main/greedyTSP-main/build/Debug/outDebug.exe", // Thêm đuôi .exe nếu dùng Windows
+      "MIMode": "gdb",
+      "miDebuggerPath": "gdb",
+      "preLaunchTask": "C/C++: g++ build active file",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ]
+    }
+  ]
+}

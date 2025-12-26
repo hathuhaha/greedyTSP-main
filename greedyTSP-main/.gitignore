@@ -1,0 +1,12 @@
+# Loại bỏ các file thực thi
+*.exe
+*.o
+*.out
+
+# Loại bỏ thư mục build
+build/
+bin/
+obj/
+
+# Loại bỏ cấu hình riêng của VS Code (Tùy chọn)
+.vscode/
