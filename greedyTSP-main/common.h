@@ -12,8 +12,11 @@
 #include <limits>
 #include <queue>
 #include <stack>
+#include <chrono>
+#include <random>
 
-#define eps 0.000000001
+#define eps 0.000001
+typedef std::chrono::time_point<std::chrono::high_resolution_clock> TimePoint;
 
 #define f first
 #define s second
