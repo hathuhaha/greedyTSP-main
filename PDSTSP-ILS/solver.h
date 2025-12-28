@@ -9,16 +9,12 @@
 
 class Solution {
 public: 
-    std::vector<int> tour; 
-    double totalLength;
-    Solution() {
-        tour = std::vector<int>();
-        totalLength = 0.0;
-    }
-    Solution(const std::vector<int> &_tour, double _totalLength) {
-        tour = _tour;
-        totalLength = _totalLength;
-    }
+    std::vector<int> tTour; 
+    std::vector<int> dTour;
+    double tTour_len, dTour_maxlen;
+    Solution();
+    Solution(const std::vector<int> &_tour, double _totalLength);
+
     //define operators
     bool operator < (const Solution &other) const;
     bool operator > (const Solution &other) const;
@@ -26,8 +22,6 @@ public:
     void operator=(const Solution &other);
 
     //define helper functions
-    void addVertex(int vertex, int position, const Instance &instance);
-    void reverseTour(int from, int to);
 
     //print functions
     void printSolution();
@@ -52,19 +46,16 @@ public:
     long long runtime;
 
     //Constructors
-    Solver() {
-        instance = Instance();
-        config = Config();
-    }
-    Solver(const Instance &_instance) {
-        instance = _instance;
-        config = Config();
-    }
+    Solver();
+    Solver(const Instance &_instance);
 
     //Set configuration parameters
     void setConfig_timeLimitInSeconds(long long _timeLimitInSeconds);
     void setConfig_algorithm(std::string _algorithmName);
     void setConfig_muatationRate(double _mutationRate);
+
+    //helpers
+    void addCustomertoTruck(int customer, int position);
 
     //Main solving functions
     Solution solve();
@@ -84,7 +75,7 @@ public:
     Solution NearestInsertion();
 
 
-    //helpers
+
 };
 
 #endif
