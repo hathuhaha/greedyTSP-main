@@ -14,6 +14,7 @@
 #include <stack>
 #include <chrono>
 #include <random>
+#include <thread>
 
 #define eps 0.000001
 typedef std::chrono::time_point<std::chrono::high_resolution_clock> TimePoint;

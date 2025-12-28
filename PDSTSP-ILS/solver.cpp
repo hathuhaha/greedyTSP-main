@@ -32,6 +32,19 @@ void Solution::addVertex(int vertex, int position, const Instance &instance) {
     tour.insert(tour.begin() + position, vertex);
 }
 
+void Solution::reverseTour(int from, int to) {
+    if(to < from || to >= tour.size()) {
+        std::cout << "Cannot reverse due to index error!";
+        return;
+    }
+    while(from < to) {
+        std::swap(tour[from], tour[to]);
+        from += 1; 
+        to -= 1;
+    }
+}
+
+
 void Solution::printSolution() {
     std::cout << "Tour: ";
     for(int v : tour) {
@@ -63,6 +76,10 @@ void Solver::setConfig_algorithm(std::string _algorithmName) {
     config.algorithmName = _algorithmName;
 }
 
+void Solver::setConfig_muatationRate(double _mutationRate) {
+    config.mutationRate = _mutationRate;
+}
+
 //Main solving function
 Solution Solver::solve() {
     auto startTime = std::chrono::high_resolution_clock::now();
@@ -76,21 +93,25 @@ Solution Solver::ILS(TimePoint &endTime) {
     Solution currentSolution = initialSolution;
     Solution bestSolution = initialSolution;  // Initialize with initial solution
 
-    // int maxIterations = 1000;
-    // for(int i = 0; i < maxIterations; i++) {
-    //     auto currentTime = std::chrono::high_resolution_clock::now();
-    //     if(currentTime >= endTime) {
-    //         break;
-    //     }
-        
-    //     Solution newSolution = perturbation(currentSolution);
-    //     newSolution = localSearch_hillClimbing(newSolution);
-    //     currentSolution = acceptanceCriterion(currentSolution, newSolution);
-        
-    //     if(currentSolution.totalLength < bestSolution.totalLength) {
-    //         bestSolution = currentSolution;
-    //     }
-    // }
+    double threshold = 0.2; 
+    double cooling_rate = 0.996;
+    int cnt = 0;
+    int maxIterations = 1000;
+    for(int i = 0; i < maxIterations; i++) {
+        Solution newSolution = currentSolution;
+        perturbation(currentSolution, newSolution);
+        localsearch(newSolution);
+        if((newSolution.totalLength - currentSolution.totalLength) / currentSolution.totalLength - threshold < -eps) {
+            currentSolution = newSolution;
+            threshold *= cooling_rate;
+
+        }
+        if(currentSolution.totalLength < bestSolution.totalLength) {
+            bestSolution = currentSolution;
+            cnt += 1;
+        }
+    }
+    std::cerr << cnt << '\n';
     return bestSolution;
 }
 Solution Solver::generateInitialSolution() {
@@ -103,21 +124,46 @@ Solution Solver::generateInitialSolution() {
 
 void Solver::localsearch(Solution &currentSolution) {
     localsearch_swap(currentSolution);
+    localsearch_2opt(currentSolution);
+    localsearch_relocate(currentSolution);
 }
 
-Solution Solver::perturbation(const Solution &currentSolution) {
-    return Solution();
+void Solver::perturbation(Solution &currentSolution, Solution &afterChangedSolution) {
+    int changedPairs = config.mutationRate * int(currentSolution.tour.size() / 2);
+    afterChangedSolution = currentSolution;
+
+    for(int i = 0; i < changedPairs; i++) {
+        std::pair<int, int> randPair = randomDistinctPair(0, currentSolution.tour.size() - 1);
+        int x = randPair.first;
+        int y = randPair.second;
+
+        //swap two vertices
+        int prev_x = (x == 0) ? afterChangedSolution.tour.back() : afterChangedSolution.tour[x - 1];
+        int next_x = (x == afterChangedSolution.tour.size() - 1) ? afterChangedSolution.tour[0] : afterChangedSolution.tour[x + 1];
+        int prev_y = (y == 0) ? afterChangedSolution.tour.back() : afterChangedSolution.tour[y - 1];
+        int next_y = (y == afterChangedSolution.tour.size() - 1) ? afterChangedSolution.tour[0] : afterChangedSolution.tour[y + 1];
+
+        double delta = -((prev_x == afterChangedSolution.tour[y]) ? 0.0 : instance.getDistance(prev_x, afterChangedSolution.tour[x]))
+                       -((next_x == afterChangedSolution.tour[y]) ? 0.0 : instance.getDistance(next_x, afterChangedSolution.tour[x]))
+                       -((prev_y == afterChangedSolution.tour[x]) ? 0.0 : instance.getDistance(prev_y, afterChangedSolution.tour[y]))
+                       -((next_y == afterChangedSolution.tour[x]) ? 0.0 : instance.getDistance(next_y, afterChangedSolution.tour[y]))
+                       +((prev_x == afterChangedSolution.tour[y]) ? 0.0 : instance.getDistance(prev_x, afterChangedSolution.tour[y]))
+                       +((next_x == afterChangedSolution.tour[y]) ? 0.0 : instance.getDistance(next_x, afterChangedSolution.tour[y]))
+                       +((prev_y == afterChangedSolution.tour[x]) ? 0.0 : instance.getDistance(prev_y, afterChangedSolution.tour[x]))
+                       +((next_y == afterChangedSolution.tour[x]) ? 0.0 : instance.getDistance(next_y, afterChangedSolution.tour[x]));
+
+        //change solution
+        std::swap(afterChangedSolution.tour[x], afterChangedSolution.tour[y]);
+        afterChangedSolution.totalLength += delta;
+    }
 }
 
-Solution Solver::acceptanceCriterion(const Solution &currentSolution, const Solution &newSolution) {
-
-    return Solution();
+void Solver::acceptanceCriterion(Solution &currentSolution, Solution &newSolution) {
+    
 }
 
 //local search methods
 void Solver::localsearch_swap(Solution &currentSolution) {
-
-    std::ofstream printlog("C:/Users/ORLab/OneDrive/Documents/Lab/greedyTSP-main/greedyTSP-main/debug.log");
 
     bool stop = false;
     while(!stop) {
@@ -146,27 +192,91 @@ void Solver::localsearch_swap(Solution &currentSolution) {
                     currentSolution.totalLength += delta;
                     stop = false;
                 }
-                printlog << delta << '\n';
 
             }
         }
 
     }
-    printlog.close();
 }
 
-void Solver::localsearch_2opt(const Solution &currentSolution) {
+void Solver::localsearch_2opt(Solution &currentSolution) {
+    std::ofstream printlog("debug.log");
+
     bool stop = false;
     while(!stop) {
-        for(int i = 0; i < currentSolution.tour.size() - 1; i++) {
-            for(int j = i + 1; j < currentSolution.tour.size(); j++) {
+        stop = true;
+        for(int i = 0; i < currentSolution.tour.size() - 1 && stop; i++) {
+            for(int j = i + 1; j < currentSolution.tour.size() && stop; j++) {
+                double delta = 0.0;
+                if(i == 0 && j == currentSolution.tour.size() - 1) {
+                    continue;
+                }
 
+                int prev_i = (i == 0) ? currentSolution.tour.back() : currentSolution.tour[i - 1];
+                int next_j = (j == currentSolution.tour.size() - 1) ? currentSolution.tour[0] : currentSolution.tour[j + 1];
+
+                delta -= instance.getDistance(prev_i, currentSolution.tour[i]);
+                delta -= instance.getDistance(next_j, currentSolution.tour[j]);
+                delta += instance.getDistance(prev_i, currentSolution.tour[j]);
+                delta += instance.getDistance(next_j, currentSolution.tour[i]);
+
+
+                if(delta < -eps) {
+                    stop = false;
+                    currentSolution.totalLength += delta;
+                    currentSolution.reverseTour(i, j);
+                }
+                printlog << delta << '\n';
+            }
+        }
+    }
+    printlog.close();
+
+}
+void Solver::localsearch_relocate(Solution &currentSolution) {
+    bool stop = false;
+    while(!stop) {
+        stop = true;
+        for(int i = 0; i < currentSolution.tour.size(); i++) {
+            for(int j = 0; j < currentSolution.tour.size(); j++) {
+                if(i == j) {
+                    continue;
+                }
+
+                double delta = 0.0;
+                int tour_i = currentSolution.tour[i];
+
+                int prev_i = (i == 0) ? currentSolution.tour.back() : currentSolution.tour[i - 1];
+                int next_i = (i == currentSolution.tour.size() - 1) ? currentSolution.tour[0] : currentSolution.tour[i + 1];
+
+                delta -= instance.getDistance(prev_i, tour_i);
+                delta -= instance.getDistance(next_i, tour_i);
+                delta += instance.getDistance(prev_i, next_i);
+
+                int id_prev_j = (j == 0) ? currentSolution.tour.size() - 1 : (j - 1);
+                if(id_prev_j == i) {
+                    id_prev_j = (id_prev_j == 0) ? currentSolution.tour.size() - 1 : (id_prev_j - 1);
+                }
+                int prev_j = currentSolution.tour[id_prev_j];
+                delta += instance.getDistance(prev_j, currentSolution.tour[i]);
+                delta += instance.getDistance(currentSolution.tour[i], currentSolution.tour[j]);
+                delta -= instance.getDistance(prev_j, currentSolution.tour[j]);
+
+                if(delta < -eps) {
+                    currentSolution.tour.erase(currentSolution.tour.begin() + i);
+                    int er = 0;
+                    if(j > i)
+                        er += 1;
+                    currentSolution.tour.insert(currentSolution.tour.begin() + j - er, tour_i);
+                    currentSolution.totalLength += delta;
+                    stop = false;
+                }
+                
             }
         }
     }
 }
-
-
+//construct new solution
 Solution Solver::NearestInsertion() {
     Solution solution;
     std::vector<bool> inTour(instance.cntVertices, false);
@@ -220,3 +330,4 @@ Solution Solver::NearestInsertion() {
     }
     return solution;
 }
+

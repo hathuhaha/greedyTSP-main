@@ -21,3 +21,19 @@ double calculateTourCost(const std::vector<int> &tour, const Instance &instance)
     }
     return totalCost;
 }
+double randomDouble(double from, double to) {
+
+    double rate = (double)rand() / RAND_MAX;
+    return from + rate * (to - from);
+}
+double randomInt(int from, int to) {
+    return from + rand() % (to - from + 1);
+}
+
+std::pair<int, int> randomDistinctPair(int from, int to) {
+    int v1 = randomInt(from, to);
+    int v2 = randomInt(from, to);
+    if(v1 != v2)
+        return std::make_pair(v1, v2);
+    return randomDistinctPair(from, to);
+}

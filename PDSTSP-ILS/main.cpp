@@ -18,7 +18,8 @@ void checkSolution(const Solution &solution, const Instance &instance) {
     }
 }
 int main() {
-    std::ifstream read_file_name("C:/Users/ORLab/OneDrive/Documents/Lab/greedyTSP-main/greedyTSP-main/fileNames.txt");
+    srand(187);
+    std::ifstream read_file_name("fileNames.txt");
     if (!read_file_name.is_open()) {
         std::cerr << "Cannot open the file fileNames.txt" << std::endl;
         return 1;
@@ -29,7 +30,7 @@ int main() {
         if (file_name.empty()) continue;
         std::cout << "Processing Instance " << file_name << std::endl;
         Instance instance;
-        instance.readFromFile("C:/Users/ORLab/OneDrive/Documents/Lab/greedyTSP-main/greedyTSP-main/formatted_data/" + file_name);
+        instance.readFromFile("formatted_data/" + file_name);
 
         Solver solver(instance);
         solver.setConfig_timeLimitInSeconds(60); 
@@ -48,7 +49,7 @@ int main() {
         std::cout << "-----------------------------------------------------------------------" << std::endl;
 
     }
-
+    std::this_thread::sleep_for(std::chrono::minutes(1));
     read_file_name.close();
     return 0;
 }
