@@ -95,6 +95,20 @@ double Solver::delta_moveDroneToTruck(Solution &solution, int id, int position) 
     return delta;
 }
 
+double Solver::delta_reverseTTour(Solution &solution, int from, int to) {
+    double delta = 0.0;
+    if(from > to)
+        std::swap(from, to);
+    if(from == 0 && to == solution.tTour.size() - 1)
+        std::swap(from, to)
+    int prev_from = (from == 0) ? solution.tTour.back() : solution.tTour[from - 1];
+    int next_to = (to == solution.tTour.size() - 1) ? solution.tTour[0] : solution.tTour[to + 1];
+
+    delta += instance.getTDistance()
+
+    return delta;
+}
+
 double Solver::delta_moveTruckToDrone(Solution &solution, int id) {
     double delta = 0.0;
     if(solution.tTour.size() > 1) {
@@ -107,13 +121,26 @@ double Solver::delta_moveTruckToDrone(Solution &solution, int id) {
     delta += instance.getDDistance(0, solution.tTour[id]) * 2;
     return delta;
 }
-
+void Solver::moveDroneToTruck(Solution &solution, int id, int position)
+{
+    double delta = delta_moveDroneToTruck(solution, id);
+    solution.total_cost += delta;
+    solution.tTour.insert(solution.tTour.begin() + position, dTour[id]);
+    solution.dTour.erase(solution.dTour.begin() + id);
+}
 void Solver::moveTruckToDrone(Solution &solution, int id) {
     double delta = delta_moveTruckToDrone(solution, id);
     solution.total_cost += delta;
     solution.dTour.push_back(solution.tTour[id]);
     solution.tTour.erase(solution.tTour.begin() + id);
 }
+void Solver::reverseTTour(Solution &solution, int from, int to) {
+    if(from > to)
+        swap(from, to);
+    double delta = 0;
+
+}
+
 
 //Main solving function
 Solution Solver::solve() {

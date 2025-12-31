@@ -55,10 +55,11 @@ public:
 
     //helpers
     void addCustomertoTruck(Solution &solution, int customer, int position);
-    double delta_moveDroneToTruck(Solution &solution, int id, int position); //
-    double delta_moveTruckToDrone(Solution &solution, int id); //
-    void moveDroneToTruck(Solution &solution, int id); //
-    void moveTruckToDrone(Solution &solution, int id); //
+    double delta_moveDroneToTruck(Solution &solution, int id, int position);
+    double delta_reverseTTour(Solution &solution, int from, int to);
+    double delta_moveTruckToDrone(Solution &solution, int id);
+    void moveDroneToTruck(Solution &solution, int id, int position); 
+    void moveTruckToDrone(Solution &solution, int id); 
     void reverseTTour(Solution &solution, int from, int to); //
 
     //Main solving functions
