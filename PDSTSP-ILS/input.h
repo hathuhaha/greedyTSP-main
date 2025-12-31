@@ -17,14 +17,15 @@ class Instance {
 
 public: 
     int cntCustomers;
-    std::vector<Vertex> customers;
+    std::vector<Customer> customers;
     std::vector<std::vector<double>> tDistance; //distance for truck
     std::vector<std::vector<double>> dDistance; // distance for drones
     Instance();
 
     void readFromFile(const std::string &fileName);
     void prepareDistanceMatrix();
-    double getDistance(int from, int to) const;
+    double getTDistance(int from, int to) const;
+    double getDDistance(int from, int to) const;
     void operator=(const Instance &other) {
         cntCustomers = other.cntCustomers;
         customers = other.customers;

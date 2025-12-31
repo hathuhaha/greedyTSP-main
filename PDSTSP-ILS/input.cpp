@@ -25,13 +25,22 @@ Instance::Instance() {
 }
 
 //Function to get distance between two vertices
-double Instance::getDistance(int from, int to) const {
-    return distance[from][to];
+double Instance::getTDistance(int from, int to) const {
+    return tDistance[from][to];
+}
+double Instance::getDDistance(int from, int to) const {
+    return dDistance[from][to];
 }
 
 //Function to prepare the distance matrix for all vertex pairs
 void Instance::prepareDistanceMatrix() {
-    //wait for data
+    for(int i = 0 ; i <= cntCustomers; i++) {
+        for(int j = i; j <= cntCustomers; j++) {
+            tDistance[j][i] = tDistance[i][j]= getManhattanDistance(customers[i], customers[j]);
+            dDistance[j][i] = dDistance[i][j] = getManhattanDistance(customer[i], customers[j]);
+        }
+    }
+
 }
 
 //Function to read instance data from a file
@@ -43,18 +52,18 @@ void Instance::readFromFile(const std::string &fileName) {
     }
 
     inputFile >> cntCustomers;
-    vertices.resize(cntCustomers);
-    tDistance.resize(cntCustomers, std::vector<double>(cntCustomers, 0.0));
-    dDistance.resize(cntCustomers, std::vector<double>(cntCustomers, 0.0));
+    customers.resize(cntCustomers + 1);
+    tDistance.resize(cntCustomers + 1, std::vector<double>(cntCustomers + 1, 0.0));
+    dDistance.resize(cntCustomers + 1, std::vector<double>(cntCustomers + 1, 0.0));
 
-    for (int i = 0; i < cntCustomers; ++i) {
+    for (int i = 0; i <= cntCustomers; ++i) {
         int id;
         double x, y;
         inputFile >> id >> x >> y;
         customers[i] = Customer(id, x, y);
     }
     inputFile.close();
-    //prepareDistanceMatrix();
+    prepareDistanceMatrix();
 
 }
 

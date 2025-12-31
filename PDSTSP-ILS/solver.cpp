@@ -2,50 +2,58 @@
 
 //Solution class implementations
 
+Solution::Solution() {
+    tTour = std::vector<int>();
+    dTour = std::vector<int>();
+    tTour_cost = 0;
+    dTour_cost = 0;
+    total_cost = 0;
+}
 
-bool Solution::operator < (const Solution &other) const {
-    return (totalLength - other.totalLength) < eps;
+bool Solution::operator<(const Solution &other) const {
+    return (total_cost - other.total_cost) < eps;
 }
 
 bool Solution::operator > (const Solution &other) const {
-    return (totalLength - other.totalLength) > eps;
-}
-
-bool Solution::operator == (const Solution &other) const {
-    return abs(totalLength - other.totalLength) < eps && tour == other.tour;
+    return (total_cost - other.total_cost) > eps;
 }
 
 void Solution::operator=(const Solution &other) {
-    tour = other.tour;
-    totalLength = other.totalLength;
+    tTour = other.tTour;
+    dTour = other.dTour;
+    tTour_cost = other.tTour_cost;
+    dTour_cost = other.dTour_cost;
+    total_cost = other.total_cost;
 }
 
-void Solution::addVertex(int vertex, int position, const Instance &instance) {
-    if(tour.size()) {
-        int prevVertex = (position == 0) ? tour.back() : tour[position - 1];
-        int nextVertex = (position == tour.size()) ? tour[0] : tour[position];
 
-        totalLength -= instance.getDistance(prevVertex, nextVertex);
-        totalLength += instance.getDistance(prevVertex, vertex);
-        totalLength += instance.getDistance(vertex, nextVertex);
-    }
-    tour.insert(tour.begin() + position, vertex);
-}
-
-void Solution::reverseTour(int from, int to) {
+void Solution::reverseTTour(int from, int to) {
     if(to < from || to >= tour.size()) {
         std::cout << "Cannot reverse due to index error!";
         return;
     }
+    double Delta = 0;
+
     while(from < to) {
-        std::swap(tour[from], tour[to]);
+        std::swap(TTour[from], TTour[to]);
         from += 1; 
         to -= 1;
     }
 }
 
+Solver::Solver() {
+    config = Config();
+    instance = Instance();
+    runtime = 0;
+}
 
-//Set configuration parameters
+Solver::Solver(const Instance &_instance) {
+    config = Config();
+    instance = Instance();
+    runtime = 0;
+}
+
+// Set configuration parameters
 void Solver::setConfig_timeLimitInSeconds(long long _timeLimitInSeconds) {
     config.timeLimitInSeconds = _timeLimitInSeconds;
 }
@@ -58,8 +66,53 @@ void Solver::setConfig_muatationRate(double _mutationRate) {
     config.mutationRate = _mutationRate;
 }
 
-void Solver::addCustomertoTruck(int customer, int position) {
 
+void Solver::addCustomertoTruck(Solution &solution, int customer, int position)
+{
+    solution.tTour.insert(solution.tTour.begin() + position, customer);
+    if(solution.tTour.size() > 1) {
+        int next_cus = (position == solution.tTour.size() - 1) ? solution.tTour[0] : solution.tTour[position + 1];
+        int prev_cus = (position == 0) ? solution.tTour.back() : solution.tTour[position - 1];
+        solution.tTour_cost += instance.getTDistance();
+    }
+}
+
+double Solver::delta_moveDroneToTruck(Solution &solution, int id, int position) {
+    double delta = 0.0;
+    delta -= instance.getDDistance(0, solution.dtour[id]) * 2;
+
+    if(solution.tTour.size() == 0) {
+        return delta;
+    }
+
+    int next_id = (position == solution.tTour.size()) ? solution.tTour[0] : solution.tTour.[position];
+    int prev_id = (position == 0) ? solution.tTour.back() : solution.tTour[position - 1];
+
+    delta -= instance.getTDistance(next_id, prev_id);
+    delta += instance.getTDistance(solution.dtour[id], next_id);
+    delta += instance.getTDistance(solution.dTour[id], prev_id);
+
+    return delta;
+}
+
+double Solver::delta_moveTruckToDrone(Solution &solution, int id) {
+    double delta = 0.0;
+    if(solution.tTour.size() > 1) {
+        int next_id = (id == solution.tTour.size() - 1) ? solution.tTour[0] : solution.tTour[id + 1];
+        int prev_id = (id == 0) ? solution.tTour.back() : solution.tTour[id - 1];
+
+        delta -= (instance.getTDistance(next_id, solution.tTour[id]) + instance.getTDistance(prev_id, solution.tTour[id]));
+        delta += instance.getTDistance(next_id, prev_id);
+    }
+    delta += instance.getDDistance(0, solution.tTour[id]) * 2;
+    return delta;
+}
+
+void Solver::moveTruckToDrone(Solution &solution, int id) {
+    double delta = delta_moveTruckToDrone(solution, id);
+    solution.total_cost += delta;
+    solution.dTour.push_back(solution.tTour[id]);
+    solution.tTour.erase(solution.tTour.begin() + id);
 }
 
 //Main solving function
@@ -120,8 +173,9 @@ void Solver::perturbation(Solution &currentSolution, Solution &afterChangedSolut
     }
 }
 
-void Solver::acceptanceCriterion(Solution &currentSolution, Solution &newSolution) {
-    
+void Solver::acceptanceCriterion(Solution &currentSolution, Solution &newSolution, double &coolingRate, double &threshold) {
+    if(newSolution)
+    threshold *= coolingRate;
 }
 
 //local search methods
@@ -129,8 +183,6 @@ void Solver::localsearch_swap(Solution &currentSolution) {
 }
 
 void Solver::localsearch_2opt(Solution &currentSolution) {
-    
-
 }
 void Solver::localsearch_relocate(Solution &currentSolution) {
     
